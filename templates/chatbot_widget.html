@@ -1,0 +1,243 @@
+<style>
+#chatbot-bubble {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #1976d2 60%, #00b09b 100%);
+    border-radius: 50%;
+    box-shadow: 0 4px 18px rgba(25,118,210,0.18);
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.2s;
+}
+#chatbot-bubble:hover {
+    box-shadow: 0 8px 32px rgba(25,118,210,0.28);
+}
+#chatbot-bubble img {
+    width: 36px;
+    height: 36px;
+}
+#chatbot-window {
+    display: none;
+    position: fixed;
+    bottom: 110px;
+    right: 32px;
+    width: 350px;
+    max-width: 95vw;
+    height: 440px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(25,118,210,0.18);
+    z-index: 1001;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Inter', Arial, sans-serif;
+}
+#chatbot-header {
+    background: linear-gradient(90deg, #1976d2 70%, #00b09b 100%);
+    color: #fff;
+    padding: 16px 20px;
+    font-weight: 600;
+    font-size: 1.13em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    letter-spacing: 0.5px;
+}
+#chatbot-close {
+    cursor: pointer;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #fff;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+#chatbot-close:hover {
+    opacity: 1;
+}
+#chatbot-messages {
+    flex: 1;
+    padding: 18px 14px;
+    overflow-y: auto;
+    background: #f7fafd;
+    font-size: 1em;
+}
+.chatbot-msg {
+    margin-bottom: 14px;
+    display: flex;
+}
+.chatbot-msg.user {
+    justify-content: flex-end;
+}
+.chatbot-msg.bot {
+    justify-content: flex-start;
+}
+.chatbot-bubble-msg {
+    max-width: 80%;
+    padding: 11px 16px;
+    border-radius: 18px;
+    background: #e3f2fd;
+    color: #222;
+    margin-left: 8px;
+    margin-right: 8px;
+    font-size: 1em;
+    box-shadow: 0 2px 8px rgba(25,118,210,0.06);
+}
+.chatbot-msg.user .chatbot-bubble-msg {
+    background: linear-gradient(90deg, #1976d2 70%, #00b09b 100%);
+    color: #fff;
+    font-weight: 500;
+}
+#chatbot-input-area {
+    display: flex;
+    border-top: 1px solid #e3f2fd;
+    background: #f7fafd;
+    padding: 8px 10px;
+}
+#chatbot-input {
+    flex: 1;
+    border: none;
+    padding: 12px 10px;
+    font-size: 1em;
+    outline: none;
+    background: transparent;
+    border-radius: 8px;
+    color: #222;
+}
+#chatbot-send {
+    background: linear-gradient(90deg, #1976d2 70%, #00b09b 100%);
+    border: none;
+    color: #fff;
+    font-size: 1.3em;
+    padding: 0 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-weight: 600;
+}
+#chatbot-send:hover {
+    background: linear-gradient(90deg, #00b09b 60%, #1976d2 100%);
+}
+</style>
+
+<div id="chatbot-bubble" title="Ask about patient">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/chat.png" alt="Chatbot"/>
+</div>
+<div id="chatbot-window">
+    <div id="chatbot-header">
+        Patient Assistant
+        <span id="chatbot-close">&times;</span>
+    </div>
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-input-area">
+        <input id="chatbot-input" type="text" placeholder="Ask about patient..." autocomplete="off"/>
+        <button id="chatbot-send">&#9658;</button>
+    </div>
+</div>
+
+<script>
+// Dummy patient data for demo; replace with Django template vars if needed
+const patientData = {
+    name: "{{ patient.name|default:'John Doe' }}",
+    age: "{{ patient.age|default:'30' }}",
+    diagnosis: "{{ patient.diagnosis|default:'Not Specified' }}",
+    admission_date: "{{ patient.admission_date|default:'2024-06-01' }}",
+    reviewer_doctor_name: "{{ patient.reviewer_doctor_name|default:'Dr. Smith' }}",
+    disease: "{{ patient.disease|default:'Under Observation' }}",
+    status: "{{ patient.status|default:'Stable' }}",
+    next_test: "{{ patient.next_test|default:'No tests scheduled' }}",
+    doctor_note: "{{ patient.doctor_note|default:'Patient is responding to treatment.' }}",
+    plan_of_action: "{{ patient.plan_of_action|default:'Continue current treatment and monitor vitals.' }}",
+    prcedure_planned: "{{ patient.prcedure_planned|default:'No procedures planned.' }}",
+    treatment_given: "{{ patient.treatment_given|default:'Standard treatment as per diagnosis.' }}",
+    next_visit_panned: "{{ patient.next_visit_panned|default:'Next visit scheduled as per treatment plan.' }}"
+};
+
+function getBotAnswer(question) {
+    const q = question.toLowerCase();
+    if (q.includes("name")) return `Patient's name is ${patientData.name}.`;
+    if (q.includes("age")) return `Patient is ${patientData.age} years old.`;
+    if (q.includes("diagnosis")) return `Diagnosis: ${patientData.diagnosis}.`;
+    if (q.includes("admission")) return `Admission date: ${patientData.admission_date}.`;
+    if (q.includes("doctor") && q.includes("review")) return `Reviewer doctor: ${patientData.reviewer_doctor_name}.`;
+    if (q.includes("disease")) return `Disease: ${patientData.disease}.`;
+    if (q.includes("status")) return `Current status: ${patientData.status}.`;
+    if (q.includes("next test")) return `Next test: ${patientData.next_test}.`;
+    if (q.includes("doctor note")) return `Doctor's note: ${patientData.doctor_note}.`;
+    if (q.includes("plan of action")) return `Plan of action: ${patientData.plan_of_action}.`;
+    if (q.includes("procedure")) return `Planned procedures: ${patientData.prcedure_planned}.`;
+    if (q.includes("treatment given")) return `Treatment given: ${patientData.treatment_given}.`;
+    if (q.includes("next visit")) return `Next visit: ${patientData.next_visit_panned}.`;
+    // Only answer basic patient info
+    if (
+        q.includes("report") ||
+        q.includes("pdf") ||
+        q.includes("scan") ||
+        q.includes("lab") ||
+        q.includes("result")
+    ) {
+        return "Sorry, I can't answer this.";
+    }
+    // If question is not recognized as basic
+    if (
+        q.includes("who") || q.includes("why") || q.includes("how") ||
+        q.includes("history") || q.includes("family") ||
+        q.length > 120 || q.split(" ").length > 15
+    ) {
+        return "Sorry, I can't answer this.";
+    }
+    // Fallback for unrelated/tough questions
+    if (
+        !(
+            q.includes("name") || q.includes("age") || q.includes("diagnosis") ||
+            q.includes("admission") || q.includes("doctor") || q.includes("disease") ||
+            q.includes("status") || q.includes("next test") || q.includes("doctor note") ||
+            q.includes("plan of action") || q.includes("procedure") ||
+            q.includes("treatment given") || q.includes("next visit")
+        )
+    ) {
+        return "Sorry, I can't answer this.";
+    }
+    return "Sorry, I can't answer this.";
+}
+
+function appendMessage(msg, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chatbot-msg ' + sender;
+    const bubble = document.createElement('div');
+    bubble.className = 'chatbot-bubble-msg';
+    bubble.innerText = msg;
+    msgDiv.appendChild(bubble);
+    document.getElementById('chatbot-messages').appendChild(msgDiv);
+    document.getElementById('chatbot-messages').scrollTop = 9999;
+}
+
+document.getElementById('chatbot-bubble').onclick = function() {
+    document.getElementById('chatbot-window').style.display = 'flex';
+    document.getElementById('chatbot-input').focus();
+};
+document.getElementById('chatbot-close').onclick = function() {
+    document.getElementById('chatbot-window').style.display = 'none';
+};
+document.getElementById('chatbot-send').onclick = sendChatbotMsg;
+document.getElementById('chatbot-input').onkeydown = function(e) {
+    if (e.key === 'Enter') sendChatbotMsg();
+};
+
+function sendChatbotMsg() {
+    const input = document.getElementById('chatbot-input');
+    const question = input.value.trim();
+    if (!question) return;
+    appendMessage(question, 'user');
+    input.value = '';
+    setTimeout(() => {
+        const answer = getBotAnswer(question);
+        appendMessage(answer, 'bot');
+    }, 400);
+}
+</script>

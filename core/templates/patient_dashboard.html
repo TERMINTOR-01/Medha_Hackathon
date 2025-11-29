@@ -5,32 +5,253 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f4f7f6; }
-        .card { border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: none; }
-        .header { background: linear-gradient(to right, #00b09b, #96c93d); color: white; padding: 20px; border-radius: 0 0 20px 20px; text-align: center; }
-        .status-stable { color: green; font-weight: bold; }
-        .status-critical { color: red; font-weight: bold; }
-        .reports-list { margin-top:16px; }
-        .report-link { color: #0b6; text-decoration: none; cursor: pointer; }
-        .report-meta { color:#666; margin-left:8px; font-size:0.9em; }
-        .modal { position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:9999; }
-        .modal-content { width:85%; height:85%; background:white; padding:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
-        .close-btn { float:right; cursor:pointer; }
-        iframe, img { width:100%; height:100%; border:0; }
+        body {
+            background: #fff;
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard-header {
+            background: #fff;
+            border-radius: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 70px;
+            margin-bottom: 0;
+            width: 100vw;
+            max-width: 100vw;
+        }
+        .dashboard-header .logo {
+            font-weight: 700;
+            font-size: 1.5em;
+            color: #1976d2;
+            letter-spacing: 1px;
+        }
+        .dashboard-nav {
+            display: flex;
+            gap: 18px;
+        }
+        .dashboard-nav .nav-link {
+            color: #222;
+            font-weight: 500;
+            padding: 8px 18px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .dashboard-nav .nav-link.active, .dashboard-nav .nav-link:hover {
+            background: #1976d2;
+            color: #fff;
+        }
+        .dashboard-header .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        .dashboard-header .user img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #1976d2;
+        }
+        .main-content {
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 40px 32px 24px 32px;
+            width: 100vw;
+            max-width: 100vw;
+            min-height: calc(100vh - 70px);
+            margin: 0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 32px;
+            width: 100%;
+        }
+        .stat-card {
+            background: #f7fafd;
+            border-radius: 18px;
+            box-shadow: none;
+            padding: 28px 22px 22px 22px;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .stat-title {
+            font-size: 1.08em;
+            color: #8ca2b3;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 2px;
+        }
+        .stat-label {
+            font-size: 1em;
+            color: #555;
+            margin-top: 2px;
+        }
+        .status-stable {
+            color: #2196f3 !important;
+        }
+        .status-critical {
+            color: #e53935 !important;
+        }
+        .info-box-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+            width: 100%;
+        }
+        .info-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border-radius: 12px;
+            padding: 18px 18px 14px 18px;
+            font-size: 1.07em;
+            font-weight: 500;
+            background: #e3f2fd;
+            color: #1976d2;
+            margin-bottom: 0;
+            min-height: 70px;
+            width: 100%;
+        }
+        .info-box.yellow {
+            background: #fff9e6;
+            color: #bfa100;
+        }
+        .info-box.green {
+            background: #e6f7ee;
+            color: #1b8e5a;
+        }
+        .info-box.purple {
+            background: #e6eaff;
+            color: #5c6bc0;
+        }
+        .info-box.gray {
+            background: #f3f3f3;
+            color: #444;
+        }
+        .info-box .icon {
+            font-size: 1.3em;
+            margin-top: 2px;
+        }
+        .info-box .box-content {
+            flex: 1;
+        }
+        .doctor-reviewed-box {
+            background: #ededed;
+            color: #444;
+            border-radius: 12px;
+            padding: 16px 18px;
+            font-weight: 600;
+            margin-top: 8px;
+            margin-bottom: 0;
+            font-size: 1.05em;
+            width: 100%;
+        }
+        .qr-section {
+            text-align: center;
+            margin-top: 18px;
+        }
+        .qr-section img {
+            border-radius: 12px;
+            border: 2px solid #e3f2fd;
+            background: #f7fafd;
+            padding: 8px;
+        }
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 12px;
+            margin-top: 32px;
+        }
+        .reports-list {
+            margin-top: 10px;
+        }
+        .report-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f7fafd;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(25,118,210,0.04);
+            width: 100%;
+        }
+        .report-link {
+            color: #1976d2;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .report-link:hover {
+            color: #0d47a1;
+            text-decoration: underline;
+        }
+        .report-meta {
+            color: #888;
+            font-size: 0.93em;
+        }
+        .modal-content {
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(25,118,210,0.18);
+        }
+        .close-btn {
+            font-size: 1.1em;
+            color: #1976d2;
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .info-grid, .info-box-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .main-content, .dashboard-header {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+        @media (max-width: 600px) {
+            .dashboard-header, .main-content {
+                padding: 0 2vw;
+            }
+            .info-grid, .info-box-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-
-    <div class="header mb-4">
-        <h2>🏥 NovaNexus Labs</h2>
-        <p>Monitor. Connect Thrive</p>
-        <p>Patient Information System</p>
+    <div class="dashboard-header">
+        <span class="logo">🏥 NovaNexus Labs</span>
+        <nav class="dashboard-nav">
+            <a class="nav-link active" href="#">Dashboard</a>
+        </nav>
+        <div class="user">
+            <span>{{ patient.name|default:"User" }}</span>
+            <img src="https://ui-avatars.com/api/?name={{ patient.name|default:'User' }}&background=1976d2&color=fff" alt="User"/>
+        </div>
     </div>
 
-    <div class="container">
-        
-        <form method="get" class="mb-4 d-flex justify-content-center gap-2" style="max-width:300px;margin:auto;">
+    <div class="main-content">
+        <form method="get" class="mb-4 d-flex justify-content-center gap-2" style="max-width:340px;margin:auto;">
             <select name="lang" class="form-select" style="width:auto;display:inline-block;">
                 <option value="en" {% if current_lang == 'en' %}selected{% endif %}>English</option>
                 <option value="hi" {% if current_lang == 'hi' %}selected{% endif %}>हिंदी (Hindi)</option>
@@ -46,82 +267,98 @@
             <button type="submit" class="btn btn-outline-dark">Change Language</button>
         </form>
 
-        <div class="card p-4">
-            <h3 class="text-center mb-3">{{ t_name_label }}: {{ patient.name }} </h3>
-            <p class="text-center text-muted">ID: {{ patient.p_id }} | Age: {{ patient.age }} | Diagnosis:{{patient.diagnosis}}</p>
-            <hr>
-
-            <div class="row text-center mt-3">
-                <div class="col-6">
-                    <h5 class="text-muted">{{ t_status_label }}</h5>
-                    <h2 class="{% if patient.status == 'Critical' %}status-critical{% else %}status-stable{% endif %}">
-                        {{ t_status }}
-                    </h2>
+        <div class="info-grid">
+            <div class="stat-card">
+                <div class="stat-title">{{ t_name_label }}</div>
+                <div class="stat-value">{{ patient.name }}</div>
+                <div class="stat-label">ID: {{ patient.p_id }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Age</div>
+                <div class="stat-value">{{ patient.age }}</div>
+                <div class="stat-label">Diagnosis: {{ patient.diagnosis }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">{{ t_status_label }}</div>
+                <div class="stat-value {% if patient.status == 'Critical' %}status-critical{% else %}status-stable{% endif %}">
+                    {{ t_status }}
                 </div>
-                <div class="col-6">
-                    <h5 class="text-muted">Condition</h5>
-                    <h4>{{ t_disease }}</h4>
-                </div>
+                <div class="stat-label">Condition: {{ t_disease }}</div>
             </div>
-
-            <div class="alert alert-info mt-4">
-                <strong>📅 {{ t_test_label }}:</strong><br>
-                {{ t_next_test }}
-            </div>
-
-            <div class="alert alert-success mt-2">
-                <strong>👨‍⚕️ {{ t_note_label }}:</strong><br>
-                {{ t_note }}
-            </div>
-
-            <div class="alert alert-warning mt-2">
-                <strong>📝 Plan of Action:</strong><br>
-                {{ t_plan_of_action }}
-            </div>
-
-            <div class="alert alert-primary mt-2">
-                <strong>🩺 Procedure Planned:</strong><br>
-                {{ t_procedure_planned }}
-            </div>
-
-            <div class="alert alert-info mt-2">
-                <strong>💊 Treatment Given:</strong><br>
-                {{ t_treatment_given }}
-            </div>
-
-            <div class="alert alert-secondary mt-2">
-                <strong>📆 Next Visit Planned:</strong><br>
-                {{ t_next_visit_planned }}
-            </div>
-
-            <div class="alert alert-secondary mt-2">
-                <strong>Doctor Reviewed:</strong>
-                {{ reviewer_doctor_name|default:"-" }}
-            </div>
-            {% if patient.qr_code %}
-            <div class="text-center mt-3">
-                <img src="{{ patient.qr_code.url }}" alt="QR Code" style="width:120px;height:120px;">
-            </div>
-            {% endif %}
         </div>
 
-        <div class="card p-4 mt-4">
-            <h4>Existing Reports</h4>
-            <div class="reports-list">
-                {% for r in existing_reports %}
-                  <div class="report-item">
-                    <a class="report-link"
-                       href="{{ r.file.url }}"
-                       data-url="{{ r.file.url }}"
-                       data-fname="{{ r.file.name }}">
-                       {{ r.description|default:r.file.name }}
-                    </a>
-                    <span class="report-meta">{{ r.uploaded_at|date:"Y-m-d H:i" }}</span>
-                  </div>
-                {% empty %}
-                  <div>No reports yet.</div>
-                {% endfor %}
+        <div class="info-box-row">
+            <div class="info-box" style="background:#e3f2fd;color:#1976d2;">
+                <span class="icon">📅</span>
+                <div class="box-content">
+                    <strong>Upcoming Test:</strong><br>
+                    {{ t_next_test }}
+                </div>
             </div>
+            <div class="info-box yellow">
+                <span class="icon">📝</span>
+                <div class="box-content">
+                    <strong>Plan of Action:</strong><br>
+                    {{ t_plan_of_action }}
+                </div>
+            </div>
+            <div class="info-box" style="background:#e3f2fd;color:#1976d2;">
+                <span class="icon">💊</span>
+                <div class="box-content">
+                    <strong>Treatment Given:</strong><br>
+                    {{ t_treatment_given }}
+                </div>
+            </div>
+        </div>
+        <div class="info-box-row">
+            <div class="info-box green">
+                <span class="icon">👨‍⚕️</span>
+                <div class="box-content">
+                    <strong>Doctor's Message:</strong><br>
+                    {{ t_note }}
+                </div>
+            </div>
+            <div class="info-box purple">
+                <span class="icon">🩺</span>
+                <div class="box-content">
+                    <strong>Procedure Planned:</strong><br>
+                    {{ t_procedure_planned }}
+                </div>
+            </div>
+            <div class="info-box gray">
+                <span class="icon">📆</span>
+                <div class="box-content">
+                    <strong>Next Visit Planned:</strong><br>
+                    {{ t_next_visit_planned }}
+                </div>
+            </div>
+        </div>
+        <div class="doctor-reviewed-box">
+            Doctor Reviewed: {{ reviewer_doctor_name|default:"-" }}
+        </div>
+
+        {% if patient.qr_code %}
+        <div class="qr-section">
+            <img src="{{ patient.qr_code.url }}" alt="QR Code" style="width:120px;height:120px;">
+            <div class="text-muted mt-2" style="font-size:0.95em;">Scan for quick access</div>
+        </div>
+        {% endif %}
+
+        <div class="section-title">Existing Reports</div>
+        <div class="reports-list">
+            {% for r in existing_reports %}
+              <div class="report-item">
+                <a class="report-link"
+                   href="{{ r.file.url }}"
+                   data-url="{{ r.file.url }}"
+                   data-fname="{{ r.file.name }}">
+                   {{ r.description|default:r.file.name }}
+                </a>
+                <span class="report-meta">{{ r.uploaded_at|date:"Y-m-d H:i" }}</span>
+              </div>
+            {% empty %}
+              <div>No reports yet.</div>
+            {% endfor %}
         </div>
 
         <!-- Modal for preview -->
