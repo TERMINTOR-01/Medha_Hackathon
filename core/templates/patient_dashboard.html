@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; }
+        .card { border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: none; }
+        .header { background: linear-gradient(to right, #00b09b, #96c93d); color: white; padding: 20px; border-radius: 0 0 20px 20px; text-align: center; }
+        .status-stable { color: green; font-weight: bold; }
+        .status-critical { color: red; font-weight: bold; }
+        .reports-list { margin-top:16px; }
+        .report-link { color: #0b6; text-decoration: none; cursor: pointer; }
+        .report-meta { color:#666; margin-left:8px; font-size:0.9em; }
+        .modal { position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:9999; }
+        .modal-content { width:85%; height:85%; background:white; padding:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
+        .close-btn { float:right; cursor:pointer; }
+        iframe, img { width:100%; height:100%; border:0; }
+    </style>
+</head>
+<body>
+
+    <div class="header mb-4">
+        <h2>🏥 LifeCare Hospital</h2>
+        <p>Patient Information System</p>
+    </div>
+
+    <div class="container">
+        
+        <form method="get" class="mb-4 d-flex justify-content-center gap-2" style="max-width:300px;margin:auto;">
+            <select name="lang" class="form-select" style="width:auto;display:inline-block;">
+                <option value="en" {% if current_lang == 'en' %}selected{% endif %}>English</option>
+                <option value="hi" {% if current_lang == 'hi' %}selected{% endif %}>हिंदी (Hindi)</option>
+                <option value="mr" {% if current_lang == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                <!-- Add more languages here if needed -->
+            </select>
+            <button type="submit" class="btn btn-outline-dark">Change Language</button>
+        </form>
+
+        <div class="card p-4">
+            <h3 class="text-center mb-3">{{ t_name_label }}: {{ patient.name }} </h3>
+            <p class="text-center text-muted">ID: {{ patient.p_id }} | Age: {{ patient.age }} | Diagnosis:{{patient.diagnosis}}</p>
+            <hr>
+
+            <div class="row text-center mt-3">
+                <div class="col-6">
+                    <h5 class="text-muted">{{ t_status_label }}</h5>
+                    <h2 class="{% if patient.status == 'Critical' %}status-critical{% else %}status-stable{% endif %}">
+                        {{ t_status }}
+                    </h2>
+                </div>
+                <div class="col-6">
+                    <h5 class="text-muted">Condition</h5>
+                    <h4>{{ t_disease }}</h4>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <strong>📅 {{ t_test_label }}:</strong><br>
+                {{ t_next_test }}
+            </div>
+
+            <div class="alert alert-success mt-2">
+                <strong>👨‍⚕️ {{ t_note_label }}:</strong><br>
+                {{ t_note }}
+            </div>
+
+            <div class="alert alert-warning mt-2">
+                <strong>📝 Plan of Action:</strong><br>
+                {{ t_plan_of_action }}
+            </div>
+
+            <div class="alert alert-primary mt-2">
+                <strong>🩺 Procedure Planned:</strong><br>
+                {{ t_procedure_planned }}
+            </div>
+
+            <div class="alert alert-info mt-2">
+                <strong>💊 Treatment Given:</strong><br>
+                {{ t_treatment_given }}
+            </div>
+
+            <div class="alert alert-secondary mt-2">
+                <strong>📆 Next Visit Planned:</strong><br>
+                {{ t_next_visit_planned }}
+            </div>
+
+            <div class="alert alert-secondary mt-2">
+                <strong>Doctor Reviewed:</strong>
+                {{ reviewer_doctor_name|default:"-" }}
+            </div>
+            {% if patient.qr_code %}
+            <div class="text-center mt-3">
+                <img src="{{ patient.qr_code.url }}" alt="QR Code" style="width:120px;height:120px;">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card p-4 mt-4">
+            <h4>Existing Reports</h4>
+            <div class="reports-list">
+                {% for r in existing_reports %}
+                  <div class="report-item">
+                    <a class="report-link"
+                       href="{{ r.file.url }}"
+                       data-url="{{ r.file.url }}"
+                       data-fname="{{ r.file.name }}">
+                       {{ r.description|default:r.file.name }}
+                    </a>
+                    <span class="report-meta">{{ r.uploaded_at|date:"Y-m-d H:i" }}</span>
+                  </div>
+                {% empty %}
+                  <div>No reports yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Modal for preview -->
+        <div id="preview-modal" class="modal" role="dialog" aria-hidden="true">
+            <div class="modal-content">
+              <span id="close-modal" class="close-btn">Close ✖</span>
+              <div id="preview-area" style="width:100%; height:100%;"></div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 text-muted small">
+            <p>
+                Updates last refreshed:
+                {% if patient %}
+                    {{ patient.updated_at|date:"Y-m-d H:i:s" }}
+                {% else %}
+                    Unknown
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function isPdf(name) {
+          return name && name.toLowerCase().endsWith('.pdf');
+        }
+        function isImage(name) {
+          return name && (name.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp)$/));
+        }
+
+        const modal = document.getElementById('preview-modal');
+        const previewArea = document.getElementById('preview-area');
+        const closeModal = document.getElementById('close-modal');
+
+        function openPreviewWithURL(url, filename) {
+          previewArea.innerHTML = '';
+          if (isPdf(filename)) {
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            previewArea.appendChild(iframe);
+          } else if (isImage(filename)) {
+            const img = document.createElement('img');
+            img.src = url;
+            previewArea.appendChild(img);
+          } else {
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            previewArea.appendChild(iframe);
+          }
+          modal.style.display = 'flex';
+        }
+
+        document.querySelectorAll('.report-link').forEach(function(el){
+          el.addEventListener('click', function(e){
+            e.preventDefault();
+            const url = this.dataset.url;
+            const fname = this.dataset.fname || url;
+            openPreviewWithURL(url, fname);
+          });
+        });
+
+        closeModal.addEventListener('click', function() {
+          modal.style.display = 'none';
+          previewArea.innerHTML = '';
+        });
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+            previewArea.innerHTML = '';
+          }
+        });
+    </script>
+</body>
+</html>
